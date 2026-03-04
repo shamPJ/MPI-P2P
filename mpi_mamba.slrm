@@ -1,7 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name=mpi-p2p
-#SBATCH --nodes=1
-#SBATCH --ntasks=6                   # total MPI ranks
+#SBATCH --nodes=2                    # 2 machines
+#SBATCH --ntasks=12                  # total MPI processes across all nodes
+#SBATCH --ntasks-per-node=6          # even distr of tasks across nodes
 #SBATCH --time=00:10:00
 #SBATCH --output=mpi_p2p_%j.out
 #SBATCH --error=mpi_p2p_%j.err
@@ -13,14 +14,6 @@ module load openmpi/4.1.6
 
 module load mamba
 source activate pytorch-env
-
-# ----------- Use Conda environment Python directly -----------
-# DO NOT load the mamba module, skip activate to avoid Python conflicts
-# PYTHON_ENV=/scratch/work/abduras1/.conda_envs/pytorch-env/bin/python
-
-# rebuild mpi4py to ensure it links to system OpenMPI
-# export MPICC=$(which mpicc)
-# $PYTHON_ENV -m pip install --force-reinstall --no-binary=mpi4py mpi4py
 
 # ----------- Run MPI Python script -----------
 srun python mpi_p2p_gmm.py

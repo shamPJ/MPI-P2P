@@ -3,6 +3,8 @@ import numpy as np
 from scipy.optimize import linear_sum_assignment
 from sklearn.mixture import GaussianMixture
 import copy
+import os
+import socket
 
 def generate_symmetric_er(size, p, seed=42):
     np.random.seed(seed)
@@ -49,8 +51,19 @@ def main():
     rank = comm.Get_rank()
     size = comm.Get_size()
 
+    hostname = socket.gethostname()
+
+    slurm_rank = os.environ.get("SLURM_PROCID", "N/A")
+    local_rank = os.environ.get("SLURM_LOCALID", "N/A")
+    node_id = os.environ.get("SLURM_NODEID", "N/A")
+
+    # Barrier to ensure ordered printing
+    comm.Barrier()
+
+    print(f"[MPI rank {rank}/{size}] host={hostname}, SLURM_PROCID={slurm_rank}, LOCALID={local_rank}, NODEID={node_id}", flush=True)
+
     K = 3
-    NUM_FED_ITER = 20
+    NUM_FED_ITER = 10
     m_neib = 20
     p = 0.5
 
@@ -126,7 +139,7 @@ def main():
     for r in range(size):
         comm.Barrier()
         if rank == r:
-            print(f"[R{rank}] FINAL means:\n{final_means}\n")
+            print(f"[R{rank}] FINAL means:\n{final_means}\n", flush=True)
 
     # -----------------------------
     # Centralized baseline (only rank 0)
@@ -172,7 +185,7 @@ def main():
     for r in range(size):
         comm.Barrier()
         if rank == r:
-            print(f"[R{rank}] Hungarian matched squared distance: {sq_dist:.4f}")
+            print(f"[R{rank}] Hungarian matched squared distance: {sq_dist:.4f}", flush=True)
         
 if __name__ == "__main__":
     main()
